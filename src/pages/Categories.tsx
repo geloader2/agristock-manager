@@ -4,12 +4,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EmptyState from "@/components/EmptyState";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 export default function Categories() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [open, setOpen] = useState(false);
   
   // Mock data - replace with actual data later
   const categories = [];
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    console.log("Category data:", Object.fromEntries(formData));
+    toast.success("Category added successfully!");
+    setOpen(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -18,10 +39,50 @@ export default function Categories() {
           <h2 className="text-3xl font-bold text-foreground">Categories</h2>
           <p className="text-muted-foreground mt-1">Organize your products</p>
         </div>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Category
-        </Button>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add Category
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Add New Category</DialogTitle>
+              <DialogDescription>
+                Create a new category to organize your products.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit}>
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Category Name *</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    placeholder="e.g., Feeds, Medicines, Pet Supplies"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    placeholder="Brief description of this category"
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Add Category</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Search */}
@@ -42,10 +103,14 @@ export default function Categories() {
           title="No categories added yet"
           description="Create categories to organize your products better"
           action={
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Your First Category
-            </Button>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add Your First Category
+                </Button>
+              </DialogTrigger>
+            </Dialog>
           }
         />
       ) : (

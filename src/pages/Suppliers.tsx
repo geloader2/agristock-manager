@@ -4,12 +4,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EmptyState from "@/components/EmptyState";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 export default function Suppliers() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [open, setOpen] = useState(false);
   
   // Mock data - replace with actual data later
   const suppliers = [];
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    console.log("Supplier data:", Object.fromEntries(formData));
+    toast.success("Supplier added successfully!");
+    setOpen(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -18,10 +39,69 @@ export default function Suppliers() {
           <h2 className="text-3xl font-bold text-foreground">Suppliers</h2>
           <p className="text-muted-foreground mt-1">Manage your supply partners</p>
         </div>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Supplier
-        </Button>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add Supplier
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Add New Supplier</DialogTitle>
+              <DialogDescription>
+                Enter the supplier's information below.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit}>
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Supplier Name *</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    placeholder="e.g., Feed Masters Inc."
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number *</Label>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    placeholder="e.g., +63 912 345 6789"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="e.g., supplier@example.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="address">Address</Label>
+                  <Textarea
+                    id="address"
+                    name="address"
+                    placeholder="Enter supplier address"
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Add Supplier</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Search */}
@@ -42,10 +122,14 @@ export default function Suppliers() {
           title="No suppliers added yet"
           description="Add suppliers to track your product sources"
           action={
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Your First Supplier
-            </Button>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add Your First Supplier
+                </Button>
+              </DialogTrigger>
+            </Dialog>
           }
         />
       ) : (
