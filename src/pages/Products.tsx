@@ -12,12 +12,39 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
 
 export default function Products() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [open, setOpen] = useState(false);
   
   // Mock data - replace with actual data later
   const products = [];
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    console.log("Product data:", Object.fromEntries(formData));
+    toast.success("Product added successfully!");
+    setOpen(false);
+  };
 
   const getStockBadge = (quantity: number) => {
     if (quantity === 0) return <Badge variant="destructive">Out of Stock</Badge>;
@@ -32,10 +59,114 @@ export default function Products() {
           <h2 className="text-3xl font-bold text-foreground">Products</h2>
           <p className="text-muted-foreground mt-1">Manage your inventory items</p>
         </div>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Product
-        </Button>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add Product
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Add New Product</DialogTitle>
+              <DialogDescription>
+                Enter the product information below.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit}>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Product Name *</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      placeholder="e.g., Chicken Feed"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="sku">SKU *</Label>
+                    <Input
+                      id="sku"
+                      name="sku"
+                      placeholder="e.g., CF-001"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category *</Label>
+                    <Select name="category" required>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="feeds">Feeds</SelectItem>
+                        <SelectItem value="medicines">Veterinary Medicines</SelectItem>
+                        <SelectItem value="pet-supplies">Pet Supplies</SelectItem>
+                        <SelectItem value="farm-tools">Farm Tools</SelectItem>
+                        <SelectItem value="accessories">Accessories</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="unit">Unit *</Label>
+                    <Select name="unit" required>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select unit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="kg">Kilogram (kg)</SelectItem>
+                        <SelectItem value="sack">Sack</SelectItem>
+                        <SelectItem value="pack">Pack</SelectItem>
+                        <SelectItem value="pcs">Pieces (pcs)</SelectItem>
+                        <SelectItem value="bottle">Bottle</SelectItem>
+                        <SelectItem value="box">Box</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="quantity">Initial Quantity *</Label>
+                    <Input
+                      id="quantity"
+                      name="quantity"
+                      type="number"
+                      min="0"
+                      placeholder="e.g., 100"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="expirationDate">Expiration Date</Label>
+                    <Input
+                      id="expirationDate"
+                      name="expirationDate"
+                      type="date"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="supplier">Supplier</Label>
+                  <Input
+                    id="supplier"
+                    name="supplier"
+                    placeholder="e.g., Feed Masters Inc."
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Add Product</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Search and Filters */}
@@ -62,10 +193,14 @@ export default function Products() {
           title="No products added yet"
           description="Start by adding your first product to the inventory"
           action={
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Your First Product
-            </Button>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add Your First Product
+                </Button>
+              </DialogTrigger>
+            </Dialog>
           }
         />
       ) : (
