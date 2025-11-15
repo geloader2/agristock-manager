@@ -1,0 +1,107 @@
+import { useState } from "react";
+import { Plus, Search, Filter, Package } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import EmptyState from "@/components/EmptyState";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+
+export default function Products() {
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Mock data - replace with actual data later
+  const products = [];
+
+  const getStockBadge = (quantity: number) => {
+    if (quantity === 0) return <Badge variant="destructive">Out of Stock</Badge>;
+    if (quantity < 10) return <Badge className="bg-warning text-warning-foreground">Low Stock</Badge>;
+    return <Badge className="bg-success text-success-foreground">In Stock</Badge>;
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-foreground">Products</h2>
+          <p className="text-muted-foreground mt-1">Manage your inventory items</p>
+        </div>
+        <Button className="gap-2">
+          <Plus className="h-4 w-4" />
+          Add Product
+        </Button>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="flex gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search products by name or SKU..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Button variant="outline" className="gap-2">
+          <Filter className="h-4 w-4" />
+          Filters
+        </Button>
+      </div>
+
+      {/* Products Table */}
+      {products.length === 0 ? (
+        <EmptyState
+          icon={Package}
+          title="No products added yet"
+          description="Start by adding your first product to the inventory"
+          action={
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add Your First Product
+            </Button>
+          }
+        />
+      ) : (
+        <div className="border rounded-lg bg-card">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product Name</TableHead>
+                <TableHead>SKU</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Stock</TableHead>
+                <TableHead>Unit</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Supplier</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {products.map((product: any) => (
+                <TableRow key={product.id}>
+                  <TableCell className="font-medium">{product.name}</TableCell>
+                  <TableCell>{product.sku}</TableCell>
+                  <TableCell>{product.category}</TableCell>
+                  <TableCell>{product.quantity}</TableCell>
+                  <TableCell>{product.unit}</TableCell>
+                  <TableCell>{getStockBadge(product.quantity)}</TableCell>
+                  <TableCell>{product.supplier}</TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="sm">Edit</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+    </div>
+  );
+}
