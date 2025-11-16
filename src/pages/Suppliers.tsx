@@ -39,14 +39,12 @@ export default function Suppliers() {
           <h2 className="text-3xl font-bold text-foreground">Suppliers</h2>
           <p className="text-muted-foreground mt-1">Manage your supply partners</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Supplier
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+        <Button className="gap-2" onClick={() => setOpen(true)}>
+            <Plus className="h-4 w-4" />
+            Add Supplier
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Add New Supplier</DialogTitle>
               <DialogDescription>
@@ -122,14 +120,10 @@ export default function Suppliers() {
           title="No suppliers added yet"
           description="Add suppliers to track your product sources"
           action={
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Add Your First Supplier
-                </Button>
-              </DialogTrigger>
-            </Dialog>
+             <Button className="gap-2" onClick={() => setOpen(true)}>
+                <Plus className="h-4 w-4" />
+                Add Your First Supplier
+              </Button>
           }
         />
       ) : (

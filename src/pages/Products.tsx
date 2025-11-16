@@ -59,14 +59,12 @@ export default function Products() {
           <h2 className="text-3xl font-bold text-foreground">Products</h2>
           <p className="text-muted-foreground mt-1">Manage your inventory items</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Product
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <Button className="gap-2" onClick={() => setOpen(true)}>
+            <Plus className="h-4 w-4" />
+            Add Product
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add New Product</DialogTitle>
               <DialogDescription>
@@ -193,14 +191,10 @@ export default function Products() {
           title="No products added yet"
           description="Start by adding your first product to the inventory"
           action={
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Add Your First Product
-                </Button>
-              </DialogTrigger>
-            </Dialog>
+             <Button className="gap-2" onClick={() => setOpen(true)}>
+                <Plus className="h-4 w-4" />
+                Add Your First Product
+              </Button>
           }
         />
       ) : (

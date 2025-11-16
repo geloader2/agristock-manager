@@ -39,14 +39,12 @@ export default function Categories() {
           <h2 className="text-3xl font-bold text-foreground">Categories</h2>
           <p className="text-muted-foreground mt-1">Organize your products</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Category
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+        <Button className="gap-2" onClick={() => setOpen(true)}>
+            <Plus className="h-4 w-4" />
+            Add Category
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Add New Category</DialogTitle>
               <DialogDescription>
@@ -103,14 +101,10 @@ export default function Categories() {
           title="No categories added yet"
           description="Create categories to organize your products better"
           action={
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Add Your First Category
-                </Button>
-              </DialogTrigger>
-            </Dialog>
+             <Button className="gap-2" onClick={() => setOpen(true)}>
+                <Plus className="h-4 w-4" />
+                Add Your First Category
+              </Button>
           }
         />
       ) : (

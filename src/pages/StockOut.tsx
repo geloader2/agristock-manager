@@ -43,13 +43,11 @@ export default function StockOut() {
           <h2 className="text-3xl font-bold text-foreground">Stock Out</h2>
           <p className="text-muted-foreground mt-1">Record inventory usage or sales</p>
         </div>
+        <Button className="gap-2" onClick={() => setOpen(true)}>
+          <Plus className="h-4 w-4" />
+          Add Stock Out
+        </Button>
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Stock Out
-            </Button>
-          </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Add Stock Out</DialogTitle>
@@ -142,14 +140,10 @@ export default function StockOut() {
               title="No stock removed yet"
               description="Track when inventory is used or sold"
               action={
-                <Dialog open={open} onOpenChange={setOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="gap-2">
+                 <Button className="gap-2" onClick={() => setOpen(true)}>
                       <Plus className="h-4 w-4" />
                       Add Stock Out
                     </Button>
-                  </DialogTrigger>
-                </Dialog>
               }
             />
           ) : (

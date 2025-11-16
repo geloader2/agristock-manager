@@ -43,13 +43,11 @@ export default function StockIn() {
           <h2 className="text-3xl font-bold text-foreground">Stock In</h2>
           <p className="text-muted-foreground mt-1">Add new stock to inventory</p>
         </div>
+        <Button className="gap-2" onClick={() => setOpen(true)}>
+          <Plus className="h-4 w-4" />
+          Add Stock In
+        </Button>
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Stock In
-            </Button>
-          </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Add Stock In</DialogTitle>
@@ -135,14 +133,10 @@ export default function StockIn() {
               title="No stock added yet"
               description="Record when you receive new inventory"
               action={
-                <Dialog open={open} onOpenChange={setOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="gap-2">
-                      <Plus className="h-4 w-4" />
-                      Add Stock In
-                    </Button>
-                  </DialogTrigger>
-                </Dialog>
+                <Button className="gap-2" onClick={() => setOpen(true)}>
+                  <Plus className="h-4 w-4" />
+                  Add Stock In
+                </Button>
               }
             />
           ) : (
