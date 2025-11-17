@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Users, Plus, Search, Phone, Mail } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EmptyState from "@/components/EmptyState";
@@ -20,16 +21,51 @@ import { toast } from "sonner";
 export default function Suppliers() {
   const [searchQuery, setSearchQuery] = useState("");
   const [open, setOpen] = useState(false);
-  
-  // Mock data - replace with actual data later
-  const suppliers = [];
+  const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    fetchSuppliers();
+  }, []);
+
+  const fetchSuppliers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("suppliers")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      setSuppliers(data || []);
+    } catch (error) {
+      console.error("Error fetching suppliers:", error);
+      toast.error("Failed to load suppliers");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    console.log("Supplier data:", Object.fromEntries(formData));
-    toast.success("Supplier added successfully!");
-    setOpen(false);
+    
+    try {
+      const { error } = await supabase.from("suppliers").insert({
+        name: formData.get("name") as string,
+        phone: formData.get("phone") as string,
+        email: formData.get("email") as string,
+        address: formData.get("address") as string,
+      });
+
+      if (error) throw error;
+      
+      toast.success("Supplier added successfully!");
+      setOpen(false);
+      fetchSuppliers();
+    } catch (error) {
+      console.error("Error adding supplier:", error);
+      toast.error("Failed to add supplier");
+    }
   };
 
   return (
@@ -114,7 +150,9 @@ export default function Suppliers() {
       </div>
 
       {/* Suppliers Grid */}
-      {suppliers.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-12">Loading suppliers...</div>
+      ) : suppliers.length === 0 ? (
         <EmptyState
           icon={Users}
           title="No suppliers added yet"
@@ -138,15 +176,12 @@ export default function Suppliers() {
                   <Phone className="h-4 w-4" />
                   {supplier.phone}
                 </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Mail className="h-4 w-4" />
-                  {supplier.email}
-                </div>
-                <div className="pt-2">
-                  <p className="text-xs text-muted-foreground">
-                    {supplier.productCount} products supplied
-                  </p>
-                </div>
+                {supplier.email && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Mail className="h-4 w-4" />
+                    {supplier.email}
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}

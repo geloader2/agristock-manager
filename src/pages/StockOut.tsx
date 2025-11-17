@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowDownCircle, Plus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import EmptyState from "@/components/EmptyState";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,14 +27,63 @@ import { toast } from "sonner";
 
 export default function StockOut() {
   const [open, setOpen] = useState(false);
-  const stockOutHistory = [];
+  const [stockOutHistory, setStockOutHistory] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    fetchStockOutHistory();
+    fetchProducts();
+  }, []);
+
+  const fetchStockOutHistory = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("stock_movements")
+        .select(`
+          *,
+          products(name, unit)
+        `)
+        .eq("type", "out")
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      setStockOutHistory(data || []);
+    } catch (error) {
+      console.error("Error fetching stock out history:", error);
+      toast.error("Failed to load history");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchProducts = async () => {
+    const { data } = await supabase.from("products").select("*");
+    setProducts(data || []);
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    console.log("Stock Out data:", Object.fromEntries(formData));
-    toast.success("Stock removed successfully!");
-    setOpen(false);
+    
+    try {
+      const { error } = await supabase.from("stock_movements").insert({
+        product_id: formData.get("product") as string,
+        type: "out",
+        quantity: parseInt(formData.get("quantity") as string),
+        reason: formData.get("reason") as string,
+        notes: formData.get("notes") as string,
+      });
+
+      if (error) throw error;
+      
+      toast.success("Stock removed successfully!");
+      setOpen(false);
+      fetchStockOutHistory();
+    } catch (error) {
+      console.error("Error removing stock:", error);
+      toast.error("Failed to remove stock");
+    }
   };
 
   return (
@@ -64,9 +114,11 @@ export default function StockOut() {
                       <SelectValue placeholder="Select product" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="chicken-feed">Chicken Feed</SelectItem>
-                      <SelectItem value="dog-food">Dog Food</SelectItem>
-                      <SelectItem value="vitamins">Vitamins</SelectItem>
+                      {products.map((product) => (
+                        <SelectItem key={product.id} value={product.id}>
+                          {product.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -134,7 +186,9 @@ export default function StockOut() {
           <CardTitle>Stock Out History</CardTitle>
         </CardHeader>
         <CardContent>
-          {stockOutHistory.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-12">Loading history...</div>
+          ) : stockOutHistory.length === 0 ? (
             <EmptyState
               icon={ArrowDownCircle}
               title="No stock removed yet"
@@ -152,12 +206,17 @@ export default function StockOut() {
                 <div key={entry.id} className="p-4 border rounded-lg">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="font-medium">{entry.product}</p>
+                      <p className="font-medium">{entry.products?.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        -{entry.quantity} {entry.unit}
+                        -{entry.quantity} {entry.products?.unit}
                       </p>
+                      {entry.reason && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Reason: {entry.reason}
+                        </p>
+                      )}
                       <p className="text-xs text-muted-foreground mt-1">
-                        By {entry.user} • {entry.timestamp}
+                        {new Date(entry.created_at).toLocaleString()}
                       </p>
                     </div>
                   </div>

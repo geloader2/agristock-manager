@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Folder, Plus, Search } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EmptyState from "@/components/EmptyState";
@@ -20,16 +21,49 @@ import { toast } from "sonner";
 export default function Categories() {
   const [searchQuery, setSearchQuery] = useState("");
   const [open, setOpen] = useState(false);
-  
-  // Mock data - replace with actual data later
-  const categories = [];
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      toast.error("Failed to load categories");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    console.log("Category data:", Object.fromEntries(formData));
-    toast.success("Category added successfully!");
-    setOpen(false);
+    
+    try {
+      const { error } = await supabase.from("categories").insert({
+        name: formData.get("name") as string,
+        description: formData.get("description") as string,
+      });
+
+      if (error) throw error;
+      
+      toast.success("Category added successfully!");
+      setOpen(false);
+      fetchCategories();
+    } catch (error) {
+      console.error("Error adding category:", error);
+      toast.error("Failed to add category");
+    }
   };
 
   return (
@@ -95,7 +129,9 @@ export default function Categories() {
       </div>
 
       {/* Categories Grid */}
-      {categories.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-12">Loading categories...</div>
+      ) : categories.length === 0 ? (
         <EmptyState
           icon={Folder}
           title="No categories added yet"
@@ -119,9 +155,11 @@ export default function Categories() {
                     </div>
                     <div>
                       <h3 className="font-semibold">{category.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {category.productCount} products
-                      </p>
+                      {category.description && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {category.description}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
