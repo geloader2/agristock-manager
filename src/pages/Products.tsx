@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Search, Filter, Package } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EmptyState from "@/components/EmptyState";
@@ -34,16 +35,72 @@ import { toast } from "sonner";
 export default function Products() {
   const [searchQuery, setSearchQuery] = useState("");
   const [open, setOpen] = useState(false);
-  
-  // Mock data - replace with actual data later
-  const products = [];
+  const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    fetchProducts();
+    fetchCategories();
+    fetchSuppliers();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select(`
+          *,
+          categories(name),
+          suppliers(name)
+        `)
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      toast.error("Failed to load products");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    const { data } = await supabase.from("categories").select("*");
+    setCategories(data || []);
+  };
+
+  const fetchSuppliers = async () => {
+    const { data } = await supabase.from("suppliers").select("*");
+    setSuppliers(data || []);
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    console.log("Product data:", Object.fromEntries(formData));
-    toast.success("Product added successfully!");
-    setOpen(false);
+    
+    try {
+      const { error } = await supabase.from("products").insert({
+        name: formData.get("name") as string,
+        sku: formData.get("sku") as string,
+        category_id: formData.get("category") as string,
+        supplier_id: formData.get("supplier") as string || null,
+        unit: formData.get("unit") as string,
+        quantity: parseInt(formData.get("quantity") as string),
+        expiration_date: formData.get("expirationDate") as string || null,
+      });
+
+      if (error) throw error;
+      
+      toast.success("Product added successfully!");
+      setOpen(false);
+      fetchProducts();
+    } catch (error: any) {
+      console.error("Error adding product:", error);
+      toast.error(error.message || "Failed to add product");
+    }
   };
 
   const getStockBadge = (quantity: number) => {
@@ -101,11 +158,11 @@ export default function Products() {
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="feeds">Feeds</SelectItem>
-                        <SelectItem value="medicines">Veterinary Medicines</SelectItem>
-                        <SelectItem value="pet-supplies">Pet Supplies</SelectItem>
-                        <SelectItem value="farm-tools">Farm Tools</SelectItem>
-                        <SelectItem value="accessories">Accessories</SelectItem>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -149,11 +206,18 @@ export default function Products() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="supplier">Supplier</Label>
-                  <Input
-                    id="supplier"
-                    name="supplier"
-                    placeholder="e.g., Feed Masters Inc."
-                  />
+                  <Select name="supplier">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select supplier (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {suppliers.map((sup) => (
+                        <SelectItem key={sup.id} value={sup.id}>
+                          {sup.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <DialogFooter>
@@ -185,7 +249,9 @@ export default function Products() {
       </div>
 
       {/* Products Table */}
-      {products.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-12">Loading products...</div>
+      ) : products.length === 0 ? (
         <EmptyState
           icon={Package}
           title="No products added yet"
@@ -217,11 +283,11 @@ export default function Products() {
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>{product.sku}</TableCell>
-                  <TableCell>{product.category}</TableCell>
+                  <TableCell>{product.categories?.name || "-"}</TableCell>
                   <TableCell>{product.quantity}</TableCell>
                   <TableCell>{product.unit}</TableCell>
                   <TableCell>{getStockBadge(product.quantity)}</TableCell>
-                  <TableCell>{product.supplier}</TableCell>
+                  <TableCell>{product.suppliers?.name || "-"}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm">Edit</Button>
                   </TableCell>
