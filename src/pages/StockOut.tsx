@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { ArrowDownCircle, Plus } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import EmptyState from "@/components/EmptyState";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,16 +38,7 @@ export default function StockOut() {
 
   const fetchStockOutHistory = async () => {
     try {
-      const { data, error } = await supabase
-        .from("stock_movements")
-        .select(`
-          *,
-          products(name, unit)
-        `)
-        .eq("type", "out")
-        .order("created_at", { ascending: false });
-      
-      if (error) throw error;
+      const data = await api.getStockMovements('out');
       setStockOutHistory(data || []);
     } catch (error) {
       console.error("Error fetching stock out history:", error);
@@ -58,8 +49,12 @@ export default function StockOut() {
   };
 
   const fetchProducts = async () => {
-    const { data } = await supabase.from("products").select("*");
-    setProducts(data || []);
+    try {
+      const data = await api.getProducts();
+      setProducts(data || []);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -67,15 +62,13 @@ export default function StockOut() {
     const formData = new FormData(e.currentTarget);
     
     try {
-      const { error } = await supabase.from("stock_movements").insert({
+      await api.createStockMovement({
         product_id: formData.get("product") as string,
         type: "out",
         quantity: parseInt(formData.get("quantity") as string),
         reason: formData.get("reason") as string,
         notes: formData.get("notes") as string,
       });
-
-      if (error) throw error;
       
       toast.success("Stock removed successfully!");
       setOpen(false);
