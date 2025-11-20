@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Package, AlertTriangle, Folder, TrendingUp } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import StatsCard from "@/components/StatsCard";
 import EmptyState from "@/components/EmptyState";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,47 +23,19 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch total products
-      const { count: productsCount } = await supabase
-        .from("products")
-        .select("*", { count: "exact", head: true });
-
-      // Fetch low stock items (quantity < 10)
-      const { data: lowStock, count: lowStockCount } = await supabase
-        .from("products")
-        .select(`
-          *,
-          categories(name)
-        `, { count: "exact" })
-        .lt("quantity", 10)
-        .order("quantity", { ascending: true })
-        .limit(5);
-
-      // Fetch categories count
-      const { count: categoriesCount } = await supabase
-        .from("categories")
-        .select("*", { count: "exact", head: true });
-
-      // Fetch recent stock movements
-      const { data: movements, count: movementsCount } = await supabase
-        .from("stock_movements")
-        .select(`
-          *,
-          products(name)
-        `, { count: "exact" })
-        .gte("created_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
-        .order("created_at", { ascending: false })
-        .limit(5);
-
+      const statsData = await api.getDashboardStats();
       setStats({
-        totalProducts: productsCount || 0,
-        lowStockItems: lowStockCount || 0,
-        categories: categoriesCount || 0,
-        recentActivity: movementsCount || 0,
+        totalProducts: statsData.totalProducts,
+        lowStockItems: statsData.lowStock,
+        categories: statsData.totalCategories,
+        recentActivity: statsData.recentActivity,
       });
 
+      const lowStock = await api.getLowStockItems();
       setLowStockItems(lowStock || []);
-      setRecentActivities(movements || []);
+
+      const activity = await api.getRecentActivity();
+      setRecentActivities(activity || []);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     } finally {

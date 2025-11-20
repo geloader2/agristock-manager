@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, Filter, Package } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EmptyState from "@/components/EmptyState";
@@ -48,16 +48,7 @@ export default function Products() {
 
   const fetchProducts = async () => {
     try {
-      const { data, error } = await supabase
-        .from("products")
-        .select(`
-          *,
-          categories(name),
-          suppliers(name)
-        `)
-        .order("created_at", { ascending: false });
-      
-      if (error) throw error;
+      const data = await api.getProducts();
       setProducts(data || []);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -68,13 +59,21 @@ export default function Products() {
   };
 
   const fetchCategories = async () => {
-    const { data } = await supabase.from("categories").select("*");
-    setCategories(data || []);
+    try {
+      const data = await api.getCategories();
+      setCategories(data || []);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
   };
 
   const fetchSuppliers = async () => {
-    const { data } = await supabase.from("suppliers").select("*");
-    setSuppliers(data || []);
+    try {
+      const data = await api.getSuppliers();
+      setSuppliers(data || []);
+    } catch (error) {
+      console.error("Error fetching suppliers:", error);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -82,17 +81,15 @@ export default function Products() {
     const formData = new FormData(e.currentTarget);
     
     try {
-      const { error } = await supabase.from("products").insert({
+      await api.createProduct({
         name: formData.get("name") as string,
         sku: formData.get("sku") as string,
         category_id: formData.get("category") as string,
-        supplier_id: formData.get("supplier") as string || null,
+        supplier_id: formData.get("supplier") as string || undefined,
         unit: formData.get("unit") as string,
         quantity: parseInt(formData.get("quantity") as string),
-        expiration_date: formData.get("expirationDate") as string || null,
+        expiration_date: formData.get("expirationDate") as string || undefined,
       });
-
-      if (error) throw error;
       
       toast.success("Product added successfully!");
       setOpen(false);

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Users, Plus, Search, Phone, Mail } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EmptyState from "@/components/EmptyState";
@@ -30,12 +30,7 @@ export default function Suppliers() {
 
   const fetchSuppliers = async () => {
     try {
-      const { data, error } = await supabase
-        .from("suppliers")
-        .select("*")
-        .order("created_at", { ascending: false });
-      
-      if (error) throw error;
+      const data = await api.getSuppliers();
       setSuppliers(data || []);
     } catch (error) {
       console.error("Error fetching suppliers:", error);
@@ -50,14 +45,12 @@ export default function Suppliers() {
     const formData = new FormData(e.currentTarget);
     
     try {
-      const { error } = await supabase.from("suppliers").insert({
+      await api.createSupplier({
         name: formData.get("name") as string,
         phone: formData.get("phone") as string,
         email: formData.get("email") as string,
         address: formData.get("address") as string,
       });
-
-      if (error) throw error;
       
       toast.success("Supplier added successfully!");
       setOpen(false);

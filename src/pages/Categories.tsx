@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Folder, Plus, Search } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EmptyState from "@/components/EmptyState";
@@ -30,12 +30,7 @@ export default function Categories() {
 
   const fetchCategories = async () => {
     try {
-      const { data, error } = await supabase
-        .from("categories")
-        .select("*")
-        .order("created_at", { ascending: false });
-      
-      if (error) throw error;
+      const data = await api.getCategories();
       setCategories(data || []);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -50,12 +45,10 @@ export default function Categories() {
     const formData = new FormData(e.currentTarget);
     
     try {
-      const { error } = await supabase.from("categories").insert({
+      await api.createCategory({
         name: formData.get("name") as string,
         description: formData.get("description") as string,
       });
-
-      if (error) throw error;
       
       toast.success("Category added successfully!");
       setOpen(false);
