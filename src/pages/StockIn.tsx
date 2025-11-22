@@ -30,6 +30,7 @@ export default function StockIn() {
   const [stockInHistory, setStockInHistory] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
 
   useEffect(() => {
     fetchStockInHistory();
@@ -102,7 +103,7 @@ export default function StockIn() {
               <div className="grid gap-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="product">Product *</Label>
-                  <Select name="product" required>
+                  <Select name="product" required onValueChange={setSelectedProductId}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select product" />
                     </SelectTrigger>
@@ -132,9 +133,9 @@ export default function StockIn() {
                     <Input
                       id="unit"
                       name="unit"
-                      placeholder="e.g., sacks"
+                      placeholder="Select a product first"
                       disabled
-                      value="sacks"
+                      value={products.find(p => p.id === selectedProductId)?.unit || ""}
                     />
                   </div>
                 </div>
